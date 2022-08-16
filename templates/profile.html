@@ -1,0 +1,68 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}{{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static "admin/css/login.css" %}">
+    {{ form.media }}
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} login{% endblock %}
+
+{% block usertools %}{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block nav-sidebar %}{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+    {% if form.errors and not form.non_field_errors %}
+        <p class="errornote">
+            {% if form.errors.items|length == 1 %}{% translate "Please correct the error below." %}{% else %}
+                {% translate "Please correct the errors below." %}{% endif %}
+                {{ form.errors }}
+        </p>
+    {% endif %}
+
+    {% if form.non_field_errors %}
+        {% for error in form.non_field_errors %}
+            <p class="errornote">
+                {{ error }}
+            </p>
+        {% endfor %}
+    {% endif %}
+
+    <div id="content-main">
+        <form method="POST" class="form-group">
+            {% csrf_token %}
+            <div class="form-row">
+                {{ form.first_name.errors }}
+                {{ form.first_name.label_tag }} {{ form.first_name }}
+            </div>
+            <div class="form-row">
+                {{ form.last_name.errors }}
+                {{ form.last_name.label_tag }} {{ form.last_name }}
+            </div>
+            <div class="form-row">
+                {{ form.phone.errors }}
+                {{ form.phone.label_tag }} {{ form.phone }}
+            </div>
+            <div class="form-row">
+                {{ form.address.errors }}
+                {{ form.address.label_tag }} {{ form.address }}
+            </div>
+            <div class="form-row">
+                {{ form.country.errors }}
+                {{ form.country.label_tag }} {{ form.country }}
+            </div>
+            <div class="submit-row">
+                <input type="submit" value="{% translate 'Update' %}">
+            </div>
+        </form>
+        <br>
+        <a href="{% url 'admin:index' %}">{% translate "<< Back" %}</a>
+    </div>
+{% endblock %}

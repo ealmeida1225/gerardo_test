@@ -1,0 +1,241 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}">{% endblock %}
+
+{% block coltype %}colM{% endblock %}
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-form{% endblock %}
+
+{% if not is_popup %}
+    {% block breadcrumbs %}
+        <div class="breadcrumbs">
+            <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+            &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+            &rsaquo; {% if has_view_permission %}<a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}
+            &rsaquo; {% if add %}{% blocktranslate with name=opts.verbose_name %}Add {{ name }}{% endblocktranslate %}{% else %}{{ original|truncatewords:"18" }}{% endif %}
+        </div>
+    {% endblock %}
+{% endif %}
+
+{% block content %}<div id="content-main">
+    {% block object-tools %}
+        {% if change %}{% if not is_popup %}
+            <ul class="object-tools">
+                {% block object-tools-items %}
+                    {% change_form_object_tools %}
+                {% endblock %}
+            </ul>
+        {% endif %}{% endif %}
+    {% endblock %}
+    <form {% if has_file_field %}enctype="multipart/form-data" {% endif %}{% if form_url %}action="{{ form_url }}" {% endif %}method="post" id="{{ opts.model_name }}_form" novalidate>{% csrf_token %}{% block form_top %}{% endblock %}
+        <div>
+            {% if is_popup %}<input type="hidden" name="{{ is_popup_var }}" value="1">{% endif %}
+            {% if to_field %}<input type="hidden" name="{{ to_field_var }}" value="{{ to_field }}">{% endif %}
+            {% if save_on_top %}{% block submit_buttons_top %}{% submit_row %}{% endblock %}{% endif %}
+            {% if errors %}
+                <p class="errornote">
+                    {% if errors|length == 1 %}{% translate "Please correct the error below." %}{% else %}{% translate "Please correct the errors below." %}{% endif %}
+                </p>
+                {{ adminform.form.non_field_errors }}
+            {% endif %}
+
+            {% block field_sets %}
+                {% for fieldset in adminform %}
+                    <fieldset class="module aligned {{ fieldset.classes }}">
+                        {% if fieldset.name %}<h2>{{ fieldset.name }}</h2>{% endif %}
+                        {% if fieldset.description %}
+                            <div class="description">{{ fieldset.description|safe }}</div>
+                        {% endif %}
+                        {% for line in fieldset %}
+                            <div class="form-row{% if line.fields|length_is:'1' and line.errors %} errors{% endif %}{% if not line.has_visible_field %} hidden{% endif %}{% for field in line %}{% if field.field.name %} field-{{ field.field.name }}{% endif %}{% endfor %}">
+                                {% if line.fields|length_is:'1' %}{{ line.errors }}{% endif %}
+                                {% for field in line %}
+                                    {% if field.field.name != 'script' %}
+                                        <div{% if not line.fields|length_is:'1' %} class="fieldBox{% if field.field.name %} field-{{ field.field.name }}{% endif %}{% if not field.is_readonly and field.errors %} errors{% endif %}{% if field.field.is_hidden %} hidden{% endif %}"{% elif field.is_checkbox %} class="checkbox-row"{% endif %}>
+                                            {% if not line.fields|length_is:'1' and not field.is_readonly %}{{ field.errors }}{% endif %}
+                                            {% if field.is_checkbox %}
+                                                {{ field.field }}{{ field.label_tag }}
+                                            {% else %}
+                                                {{ field.label_tag }}
+                                                {% if field.is_readonly %}
+                                                    <div class="readonly">{{ field.contents }}</div>
+                                                {% else %}
+                                                    {{ field.field }}
+                                                {% endif %}
+                                            {% endif %}
+                                            {% if field.field.help_text %}
+                                                <div class="help">{{ field.field.help_text|safe }}</div>
+                                            {% endif %}
+                                        </div>
+                                    {% else %}
+                                        <div{% if not line.fields|length_is:'1' %} class="fieldBox{% if field.field.name %} field-{{ field.field.name }}{% endif %}{% if not field.is_readonly and field.errors %} errors{% endif %}{% if field.field.is_hidden %} hidden{% endif %}"{% elif field.is_checkbox %} class="checkbox-row"{% endif %}>
+                                            {% if not line.fields|length_is:'1' and not field.is_readonly %}{{ field.errors }}{% endif %}
+                                            {% if field.is_checkbox %}
+                                                {{ field.field }}{{ field.label_tag }}
+                                            {% else %}
+                                                {{ field.label_tag }}
+                                                {% if field.is_readonly %}
+                                                    <div class="readonly">{{ field.contents }}</div>
+                                                {% else %}
+                                                    <small>
+                                                        <p><u><b>{% translate "Palabras claves" %} </b> {% translate "(tenga en cuenta que debe existir al menos un espacio entre cada palabra en la consola):" %}</u></p>
+                                                        <ul>
+                                                            <li>
+                                                                <br>
+                                                                <p>{% translate "El siguiente número será el considerado dentro del script cada vez que se escriba" %} <code>value</code>.</p>
+                                                                <label for="value_script"><code>value</code> = </label>
+                                                                <input type="number" placeholder="Valor de 'value'" id="value_script" name="value_script"
+                                                                       onfocusout="ValidateContentFunction()" min="100" max="10000" value="1000">
+                                                                <p><i>{% translate "(El <b>1000</b> es un valor inicial de referencia, puede poner el número que desee, recordando siempre que se refiere a la cantidad de dinero que debe llegar al destinatario.)" %}</i></p>
+                                                                <p>{% translate "Operadores permitidos para modificar <code>value</code> <i>(No olvide separar por al menos un espacio, cada entrada en la consola):</i>" %}</p>
+                                                                <ul>
+                                                                    <li>
+                                                                        <p><b>+</b> {% translate "Adiciona el valor que esté a la derecha al valor actual de <code>value</code>." %}</p>
+                                                                    </li>
+                                                                    <li>
+                                                                        <p><b>-</b> {% translate "Resta el valor que esté a la derecha al valor actual de <code>value</code>. " %}</p>
+                                                                    </li>
+                                                                    <li>
+                                                                        <p><b>*</b> {% translate "Multiplica el valor que esté a la derecha al valor actual de <code>value</code>. " %}</p>
+                                                                    </li>
+                                                                    <li>
+                                                                        <p><b>/</b>{% translate "Divide el valor que esté a la derecha al valor actual de <code>value</code>. " %}</p>
+                                                                    </li>
+                                                                </ul>
+                                                            </li>
+                                                            <p>
+                                                                <br>
+                                                                <br>
+                                                                <br>
+                                                            <p><code>rate_to ({method}, {custom_fee_value})</code>: </p>
+                                                            <p>{% translate "Evalúa la conversión entre la moneda declarada en esta forma de pago y una de las monedas disponibles en la lista de abajo. La tasa de conversión base sobre la que se realizará el resto de las operaciones será la establecida oficialmente por la plataforma <code><b>Transfer Wise</b></code> (en lo sucesivo <code>rate_factor_wise</code>)." %}</p>
+
+                                                            <label for="coins">{% translate "Monedas disponibles" %}</label>
+                                                            <select name="coins" id="coins">
+                                                                <option value="USD">{% translate "Dolar Americano" %}</option>
+                                                                <option value="EUR">Euro</option>
+
+                                                            </select>
+                                                            <p>{% translate "El método de <i>rating</i> se define en <code>{method}</code> y deberá tomar solo uno de los siguientes valores:" %}</p>
+                                                            <ul>
+                                                                <li style="all: revert"><b>R</b>: {% translate "en cuyo caso se utilizará una estrategia relativa, que consiste en sumar el <code>custom_fee_value</code> <b>(tomándolo como el porcentaje)</b> a la cantidad de dinero a depositar a partir de las tasas de cambio actuales. <br><br>La fórmula aplicada será:<br> <i>(value/rate_factor_wise) + {custom_fee_value}/(value / rate_factor_wise)</i>" %}</li><br>
+                                                                <li style="all: revert"><b>F</b>: {% translate "en cuyo caso se hará según una estrategia estática, que consiste en sumar el <code>custom_fee_value</code> a la cantidad de dinero a depositar a partir de las tasas de cambio actuales. <br><br>La fórmula aplicada será: <br><i>(value / rate_factor_wise) + {custom_fee_value}</i>" %}</li>
+                                                            </ul>
+                                                            <p>{% translate "El parámetro <code>{custom_fee_value}</code> le permitirá colocar el valor que desee y probar posibles resultados (Recuerde que si <code>{method}</code> es igual a <b>R</b> debe colocarlo como porciento)." %}</p>
+                                                            </li>
+                                                        </ul>
+
+                                                    </small>
+                                                    <br>
+                                                    <br>
+                                                    <div class="success" id="response" ><p></p></div>
+                                                    {{ field.field }}
+
+                                                    <a
+                                                            onclick="checkScript();"
+                                                            style="
+                               cursor: pointer;
+                               float: right;
+                               margin-top: 10px;
+                               border-radius: 10px;
+                               border-style: solid;
+                               border-width: 1px;
+                               border-color: rgba(53,93,90,0.67);
+                               padding: 5px">
+                                                        {% translate "Probar Script AHORA" %}
+                                                    </a>
+                                                {% endif %}
+                                            {% endif %}
+                                            {% if field.field.help_text %}
+                                                <div class="help">{{ field.field.help_text|safe }}</div>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </fieldset>
+                {% endfor %}
+            {% endblock %}
+
+            {% block after_field_sets %}{% endblock %}
+
+            {% block inline_field_sets %}
+                {% for inline_admin_formset in inline_admin_formsets %}
+                    {% include inline_admin_formset.opts.template %}
+                {% endfor %}
+            {% endblock %}
+
+            {% block after_related_objects %}{% endblock %}
+
+            {% block submit_buttons_bottom %}{% submit_row %}{% endblock %}
+
+            {% block admin_change_form_document_ready %}
+                <script id="django-admin-form-add-constants"
+                        src="{% static 'admin/js/change_form.js' %}"
+                        {% if adminform and add %}
+                        data-model-name="{{ opts.model_name }}"
+                        {% endif %}
+                        async>
+                </script>
+            {% endblock %}
+
+            {# JavaScript for prepopulated fields #}
+            {% prepopulated_fields_js %}
+
+        </div>
+    </form></div>
+{% endblock %}
+{% block extrahead %}{{ block.super }}
+    <script src="{% url 'admin:jsi18n' %}"></script>
+    {{ media }}
+    <script>
+        function ValidateContentFunction()
+        {
+            if (document.getElementById('value_script').value < 100)
+            {
+                alert("El valor para realizar las pruebas debe ser un número mayor que 100");
+                document.getElementById('value_script').value = "";
+            }
+        }
+
+        function checkScript() {
+            const header = {"Content-Type": "application/json"};
+            const editor = document.querySelector('.CodeMirror').CodeMirror;
+            const text = editor.getValue();
+            const value_script = document.querySelector('#value_script').value;
+            const id_coin = document.querySelector('#id_coin').value;
+            const response = document.querySelector('#response');
+            var coins_select = document.getElementById('coins');
+            var coins_value = coins_select.options[coins_select.selectedIndex].value;
+            if (value_script === "")
+            {
+                response.innerText = "La variable 'value' debe tener un valor.";
+                return;
+            }
+            {#alert(text);#}
+            let data = new FormData();
+            data.set('script', text);
+            data.set('id_coin', id_coin);
+            data.set('value', value_script);
+            data.set('coins_value', coins_value);
+
+            fetch('{{ request.scheme }}://{{ request.META.HTTP_HOST }}/api/v1/run_paywaycoin_script/',
+                {
+                    method:'POST',
+                    body:data,
+                })
+                .then(resp => resp.json())
+                .then(data => {
+                    if (data['Error'])
+                        response.innerText = "Hay errores en el script. " + data['Error']
+                    else
+                        response.innerText = "Resultado: " + data['value'] + ' ' + data['target']
+                })
+        }
+    </script>
+{% endblock %}
