@@ -6,10 +6,10 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.views.generic.edit import UpdateView
 from django.urls import reverse_lazy
-from institution_project.settings import SESSION_COOKIE_DOMAIN
+# from institution_project.settings import SESSION_COOKIE_DOMAIN
 
 from institutions_app.forms import ProfileForm, RegisterForm
-from institutions_app.utils import set_cookie
+# from institutions_app.utils import set_cookie
 # from forms import RegisterForm, ProfileForm
 
 def index(request):
@@ -47,7 +47,7 @@ def login_view(request):
                 next = request.POST.get('next', None)
                 url_response = next if next else url_response
                 response = HttpResponseRedirect(url_response)
-                set_cookie(response, 'user', user)
+                # set_cookie(response, 'user', user)
                 return response
             else:
                 messages.error(request, "Usuario inactivo")
@@ -63,7 +63,7 @@ def login_view(request):
 def logout_view(request):
     response = HttpResponseRedirect('/admin/')
     logout(request)
-    response.delete_cookie('user', domain=SESSION_COOKIE_DOMAIN)
+    # response.delete_cookie('user', domain=SESSION_COOKIE_DOMAIN)
     return response
 
 class user_update(UpdateView):
