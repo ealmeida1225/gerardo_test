@@ -15,6 +15,8 @@ from institutions_app.forms import ProfileForm, RegisterForm
 def index(request):
     return HttpResponse("Hello, world. You're at the polls index.")
 
+def rendering(request):
+    return HttpResponseRedirect('/admin/login/')
 
 # Create your views here.
 def register_view(response):
