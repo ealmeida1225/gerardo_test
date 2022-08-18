@@ -19,6 +19,7 @@ from institutions_app import views
 
 
 urlpatterns = [
+    path('', views.rendering, name='rendering'),
     path('admin/', admin.site.urls),
     path('institutions/', include('institutions_app.urls')),
     path('accounts/', include('django.contrib.auth.urls')),
